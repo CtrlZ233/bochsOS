@@ -10,6 +10,31 @@ VIDEO_SELECTOR equ 0x18
 
 [bits 32]
 section .text
+
+global put_string
+put_string:
+    push ebx
+    push ecx
+
+    xor ecx, ecx
+    mov ebx, [esp + 12]     ;基地址
+
+go_on:
+    mov cl, [ebx]
+    cmp cl, 0
+    je put_str_end
+    push ecx
+    call put_char
+    add esp, 4
+    inc ebx
+    jmp go_on
+
+put_str_end:
+    pop ecx
+    pop ebx
+    ret
+
+
 global put_char
 put_char:
     pushad      ; 保存寄存器现场

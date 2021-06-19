@@ -1,0 +1,132 @@
+%line 1+1 /home/ctrlz/workSpace/bochsOS/src/boot/mbr.asm
+
+
+
+
+
+boot_loader_addr equ 0x900
+
+[org 0x7c00]
+[bits 16]
+
+
+ cli
+ xor ax, ax
+ mov ss, ax
+ mov sp, 0x7c00
+ mov si, sp
+ mov es, ax
+ mov ds, ax
+ sti
+
+ cld
+
+ mov si, DPT
+
+find_active_section:
+ cmp si, 0x7DEF
+ jge active_section_err
+ mov al, [si]
+ cmp al, 0x80
+ jne next_section_elem
+
+ xor eax, eax
+ mov eax, [si + 0x3]
+ mov cx, [si + 0xc]
+ cmp bx, dx
+ jng load_section
+ jmp active_section_err
+
+next_section_elem:
+ add si, 0x10
+ jmp find_active_section
+
+
+load_section:
+ mov ebx, boot_loader_addr
+ call ReadLBA
+ jmp boot_loader_addr + 0x200
+
+
+active_section_err:
+ jmp $
+
+ReadLBA:
+
+
+
+
+ mov esi,eax
+ mov di,cx
+
+
+ mov dx,0x1f2
+ mov al,cl
+ out dx,al
+
+ mov eax,esi
+
+
+
+
+ mov dx,0x1f3
+ out dx,al
+
+
+ mov cl,8
+ shr eax,cl
+ mov dx,0x1f4
+ out dx,al
+
+
+ shr eax,cl
+ mov dx,0x1f5
+ out dx,al
+
+ shr eax,cl
+ and al,0x0f
+ or al,0xe0
+ mov dx,0x1f6
+ out dx,al
+
+
+ mov dx,0x1f7
+ mov al,0x20
+ out dx,al
+
+
+ .not_ready:
+
+ nop
+ in al,dx
+ and al,0x88
+ cmp al,0x08
+ jnz .not_ready
+
+
+ mov ax, di
+ mov dx, 256
+ mul dx
+ mov cx, ax
+
+ mov dx, 0x1f0
+ .go_on_read:
+ in ax,dx
+ mov [bx],ax
+ add bx,2
+ loop .go_on_read
+ ret
+
+ times 446 - ($-$$) db 0
+
+DPT:
+ db 0x80
+ db 0x00, 0x00, 0x10
+ db 0x00
+ db 0x00, 0x00, 0x19
+ dd 0x00
+ dd 0xA
+
+
+ times 510 - ($-$$) db 0
+ dw 0xaa55

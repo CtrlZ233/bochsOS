@@ -1,0 +1,470 @@
+%line 1+1 /home/ctrlz/workSpace/bochsOS/src/boot/bootloader.asm
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%line 26+1 /home/ctrlz/workSpace/bochsOS/src/boot/bootloader.asm
+
+%line 33+1 /home/ctrlz/workSpace/bochsOS/src/boot/bootloader.asm
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%line 71+1 /home/ctrlz/workSpace/bochsOS/src/boot/bootloader.asm
+
+
+
+%line 81+1 /home/ctrlz/workSpace/bochsOS/src/boot/bootloader.asm
+
+CS_SELECTOR equ 0x8
+DS_SELECTOR equ 0x10
+VIDEO_SELECTOR equ 0x18
+
+PAGE_DIR_TBALE_ADDR equ 0x100000
+LOADER_STACK_TOP equ 0x900
+
+
+KERNEL_BIN_START_SECTION equ 0x20
+KERNEL_BIN_BASE_ADDR equ 0x70000
+KERNEL_BIN_SECTION_NUM equ 0xC8
+KENREL_ENTRY_POINT equ 0xc0001500
+[org 0x900]
+
+
+
+
+
+GDT:
+NULL_SEG:
+ dd 0, 0
+CODE_SEG:
+ dw ((0xFFFFF) & 0xffff), ((0x0) & 0xffff)
+%line 104+0 /home/ctrlz/workSpace/bochsOS/src/boot/bootloader.asm
+ db (((0x0) >> 16) & 0xff), (0x90 | ((0x8 | 0x2))), (0xc0 | (((0xFFFFF) >> 16) & 0xf)), (((0x0) >> 24) & 0xff)
+%line 105+1 /home/ctrlz/workSpace/bochsOS/src/boot/bootloader.asm
+
+DATA_SEG:
+ dw ((0xFFFFF) & 0xffff), ((0x0) & 0xffff)
+%line 107+0 /home/ctrlz/workSpace/bochsOS/src/boot/bootloader.asm
+ db (((0x0) >> 16) & 0xff), (0x90 | (0x2)), (0xc0 | (((0xFFFFF) >> 16) & 0xf)), (((0x0) >> 24) & 0xff)
+%line 108+1 /home/ctrlz/workSpace/bochsOS/src/boot/bootloader.asm
+
+VIDEO_SEG:
+ dw ((0x7) & 0xffff), ((0xB8000) & 0xffff)
+%line 110+0 /home/ctrlz/workSpace/bochsOS/src/boot/bootloader.asm
+ db (((0xB8000) >> 16) & 0xff), (0x90 | (0x2)), (0xc0 | (((0x7) >> 16) & 0xf)), (((0xB8000) >> 24) & 0xff)
+%line 111+1 /home/ctrlz/workSpace/bochsOS/src/boot/bootloader.asm
+
+GDT_SIZE equ $ - GDT
+GDT_LIMIT equ GDT_SIZE - 1
+
+empty_slot:
+ times 256 - ($-GDT) db 0
+
+GDT_Description:
+ dw GDT_LIMIT
+ dd GDT
+
+
+[sectalign 4]
+%line 123+0 /home/ctrlz/workSpace/bochsOS/src/boot/bootloader.asm
+times (((4) - (($-$$) % (4))) % (4)) nop
+%line 124+1 /home/ctrlz/workSpace/bochsOS/src/boot/bootloader.asm
+ARDS_BUF:
+ times 256 - 2- ($-GDT_Description) db 0
+
+ARDS_NUM:
+ dw 0
+
+
+[bits 16]
+
+
+ call MemoryDetect
+ call FindMaxMemory
+
+
+
+
+
+
+
+ in al, 0x92
+ or al, 0x2
+ out 0x92, al
+
+
+ lgdt [GDT_Description]
+
+ cli
+ xor eax, eax
+ mov eax, cr0
+ or eax, 0x00000001
+ mov cr0, eax
+
+ jmp CS_SELECTOR:p_mode_start
+
+
+
+MemoryDetect:
+
+ xor ebx, ebx
+ mov edx, 0x534d4150
+ mov di, ARDS_BUF
+
+getloop:
+ mov eax, 0xE820
+ mov ecx, 0x14
+ int 0x15
+ jc err_code
+ add di, cx
+ inc word [ARDS_NUM]
+ cmp ebx, 0
+ jnz getloop
+
+ ret
+
+FindMaxMemory:
+ mov cx, [ARDS_NUM]
+ mov ebx, ARDS_BUF
+ xor edx, edx
+
+findLoop:
+ mov eax, [ebx]
+ add eax, [ebx + 8]
+ add ebx, 0x14
+ cmp edx, eax
+ jge next_ARDS
+ mov edx, eax
+
+next_ARDS:
+ loop findLoop
+ ret
+
+
+
+
+[bits 32]
+p_mode_start:
+ xor eax, eax
+ mov ax, DS_SELECTOR
+ mov ds, ax
+ mov es, ax
+ mov ss, ax
+ mov esp, LOADER_STACK_TOP
+ mov ax, VIDEO_SELECTOR
+ mov gs, ax
+
+
+ mov eax, KERNEL_BIN_START_SECTION
+ mov ebx, KERNEL_BIN_BASE_ADDR
+ mov ecx, KERNEL_BIN_SECTION_NUM
+ call ReadLBA
+
+
+ call SetPage
+
+ sgdt [GDT_Description]
+
+ mov ebx, [GDT_Description + 2]
+ mov ecx, 0x3
+ mov esi, 0x1
+
+reset_gdt:
+ or dword [ebx + esi * 0x8 + 4], 0xc0000000
+ inc esi
+ loop reset_gdt
+
+ add dword [GDT_Description + 2], 0xc0000000
+ add esp, 0xc0000000
+
+ mov eax, PAGE_DIR_TBALE_ADDR
+ mov cr3, eax
+
+ mov eax, cr0
+ or eax, 0x80000000
+ mov cr0, eax
+
+ lgdt [GDT_Description]
+ mov byte [gs:160], 'V'
+
+ jmp CS_SELECTOR:kernelEntry
+
+kernelEntry:
+ call KerelInit
+ mov esp, 0xc009f000
+ jmp word KENREL_ENTRY_POINT
+
+
+SetPage:
+ mov ecx, 4096
+ mov esi, 0
+
+clear_page_dir:
+ mov byte [PAGE_DIR_TBALE_ADDR + esi], 0
+ inc esi
+ loop clear_page_dir
+
+create_pde:
+ mov eax, PAGE_DIR_TBALE_ADDR
+ add eax, 0x1000
+ mov ebx, eax
+
+ or eax, 1b | 10b |000b
+ mov [PAGE_DIR_TBALE_ADDR], eax
+ mov [PAGE_DIR_TBALE_ADDR + 0xc00], eax
+
+ sub eax, 0x1000
+ mov [PAGE_DIR_TBALE_ADDR + 4092], eax
+
+
+ mov ecx, 256
+ mov esi, 0
+ xor edx, edx
+ mov edx, 1b | 10b |000b
+
+create_pte:
+ mov [ebx + 4 * esi], edx
+ add edx, 4096
+ inc esi
+ loop create_pte
+
+
+ mov eax, PAGE_DIR_TBALE_ADDR
+ add eax, 0x2000
+ or eax, 1b | 10b |000b
+
+ mov ecx, 254
+ mov esi, 0xC04
+
+create_kernel_pde:
+ mov [PAGE_DIR_TBALE_ADDR + esi], eax
+ add esi, 0x4
+ add eax, 0x1000
+ loop create_kernel_pde
+
+
+
+
+init_kernel_page:
+
+ mov [PAGE_DIR_TBALE_ADDR + 0x80], eax
+ mov ebx, [PAGE_DIR_TBALE_ADDR + 0x80]
+ and ebx, 0xFFFFF000
+ mov edx, 0x600000
+ or edx, 1b | 10b |000b
+ mov esi, 0
+ mov ecx, 1024
+
+create_kernel_pte:
+ mov [ebx + 4 * esi], edx
+ add edx, 4096
+ inc esi
+ loop create_kernel_pte
+
+ ret
+
+ReadLBA:
+
+
+
+
+ mov esi,eax
+ mov edi,ecx
+
+
+ mov dx,0x1f2
+ mov al,cl
+ out dx,al
+
+ mov eax,esi
+
+
+
+
+ mov dx,0x1f3
+ out dx,al
+
+
+ mov cl,8
+ shr eax,cl
+ mov dx,0x1f4
+ out dx,al
+
+
+ shr eax,cl
+ mov dx,0x1f5
+ out dx,al
+
+ shr eax,cl
+ and al,0x0f
+ or al,0xe0
+ mov dx,0x1f6
+ out dx,al
+
+
+ mov dx,0x1f7
+ mov al,0x20
+ out dx,al
+
+
+ .not_ready:
+
+ nop
+ in al,dx
+ and al,0x88
+ cmp al,0x08
+ jnz .not_ready
+
+
+ mov ax, di
+ mov dx, 256
+ mul dx
+ mov cx, ax
+
+ mov dx, 0x1f0
+ .go_on_read:
+ in ax,dx
+ mov [ebx],ax
+ add ebx,2
+ loop .go_on_read
+ ret
+
+
+KerelInit:
+ xor eax, eax
+ xor ebx, ebx
+ mov ebx, [KERNEL_BIN_BASE_ADDR + 28]
+ add ebx, KERNEL_BIN_BASE_ADDR
+ xor ecx, ecx
+ mov cx, [KERNEL_BIN_BASE_ADDR + 44]
+ xor edx, edx
+ mov dx, [KERNEL_BIN_BASE_ADDR + 42]
+
+each_segment:
+ mov eax, [ebx]
+ cmp eax, 0x0
+ je pt_null
+
+
+
+ push dword [ebx + 16]
+
+ mov eax, [ebx + 4]
+ add eax, KERNEL_BIN_BASE_ADDR
+ push eax
+
+ push dword [ebx + 8]
+
+ call MemCpy
+ add esp, 12
+
+pt_null:
+ add ebx, edx
+ loop each_segment
+
+ ret
+
+MemCpy:
+ push ebp
+ mov ebp, esp
+ push ecx
+
+ mov edi, [ebp + 8]
+ mov esi, [ebp + 12]
+ mov ecx, [ebp + 16]
+ rep movsb
+
+ pop ecx
+ pop ebp
+
+ ret
+
+err_code:
+ jmp $
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
