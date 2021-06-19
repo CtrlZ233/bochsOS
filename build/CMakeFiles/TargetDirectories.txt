@@ -1,4 +1,0 @@
-/home/ctrlz/workSpace/bochsOS/build/CMakeFiles/rebuild_cache.dir
-/home/ctrlz/workSpace/bochsOS/build/CMakeFiles/edit_cache.dir
-/home/ctrlz/workSpace/bochsOS/build/CMakeFiles/bootLoader.dir
-/home/ctrlz/workSpace/bochsOS/build/CMakeFiles/mbr.dir
