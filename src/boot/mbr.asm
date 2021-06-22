@@ -19,6 +19,11 @@ bits 16
     sti
 
     cld ;存储器地址自动增加
+    
+    ; 清屏
+    mov ah,0x00
+    mov al,0x03
+    int 0x10
 
     mov si, DPT      ; 0x7c10
 

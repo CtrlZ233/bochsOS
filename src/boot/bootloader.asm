@@ -91,7 +91,7 @@ KERNEL_BIN_START_SECTION equ 0x20
 KERNEL_BIN_BASE_ADDR equ 0x70000    ; 随便找个空地方
 KERNEL_BIN_SECTION_NUM equ 0xC8
 KENREL_ENTRY_POINT equ 0xc0001500  ; 虚拟地址
-org 0x900
+section bootloader vstart=0x900
     ;---------------------------------------------------------------------------------------
     ;---------------------------------------------------------------------------------------
     ; 预留512 bytes 用来存放GDT和内存相关的数据结构，其中GDT占256个字节
@@ -237,7 +237,7 @@ reset_gdt:
     mov cr0, eax
 
     lgdt [GDT_Description]
-    mov byte [gs:160], 'V'
+    ; mov byte [gs:160], 'V'
 
     jmp CS_SELECTOR:kernelEntry
 
