@@ -5,10 +5,11 @@ vgaromimage: file=/usr/local/share/bochs/VGABIOS-lgpl-latest
 boot: disk
 
 log: ./bochs.out
-display_library: x, options="gui_debug"
+# display_library: x, options="gui_debug"
 mouse: enabled=0
 
 keyboard: keymap=/usr/local/share/bochs/keymaps/x11-pc-us.map
 ata0: enabled=1,ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 ata1: enabled=1, ioaddr1=0x170, ioaddr2=0x370, irq=15
+gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
 ata0-master: type=disk, path="./img/start.img", mode=flat

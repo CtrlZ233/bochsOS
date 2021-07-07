@@ -14,11 +14,12 @@ cd ..
 nasm -f elf32 -o ./build/obj/print.o ./src/lib/kernel/print.asm
 nasm -f elf32 -o ./build/obj/kernel.o ./src/kernel/kernel.asm
 
-gcc -m32 -I ./include/kernel/ -c -fno-stack-protector -fno-builtin -o ./build/obj/main.o ./src/kernel/main.c
-gcc -m32 -I ./include/kernel/ -c -fno-stack-protector -fno-builtin -o ./build/obj/init.o ./src/kernel/init.c
-gcc -m32 -I ./include/kernel/ -c -fno-stack-protector -fno-builtin -o ./build/obj/interrupt.o ./src/kernel/interrupt.c
-ld -m elf_i386 -Ttext 0xc0001500 -e main -o ./build/bin/kernel.bin  ${OBJDIR}/main.o  ${OBJDIR}/init.o\
- ${OBJDIR}/interrupt.o ${OBJDIR}/print.o ${OBJDIR}/kernel.o
+gcc -g -O0 -m32 -I ./include/kernel/ -c -fno-stack-protector -fno-builtin -o ./build/obj/main.o ./src/kernel/main.c
+gcc -g -O0 -m32 -I ./include/kernel/ -c -fno-stack-protector -fno-builtin -o ./build/obj/init.o ./src/kernel/init.c
+gcc -g -O0 -m32 -I ./include/kernel/ -c -fno-stack-protector -fno-builtin -o ./build/obj/interrupt.o ./src/kernel/interrupt.c
+gcc -g -O0 -m32 -I ./include/kernel/ -c -fno-stack-protector -fno-builtin -o ./build/obj/timer.o ./src/kernel/timer.c
+ld -m elf_i386 -Ttext 0x00001500 -e main -o ./build/bin/kernel.bin  ${OBJDIR}/main.o  ${OBJDIR}/init.o\
+ ${OBJDIR}/interrupt.o ${OBJDIR}/timer.o ${OBJDIR}/print.o ${OBJDIR}/kernel.o 
 
 mbr_path=$DIRPRE'build/bin/mbr.bin'
 img_path=$DIRPRE"img/start.img"

@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "print.h": "c",
-        "interrupt.h": "c"
+        "interrupt.h": "c",
+        "stdint.h": "c",
+        "timer.h": "c"
     }
 }
