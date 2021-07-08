@@ -1,15 +1,9 @@
-#include "interrupt.h"
-#include "stdint.h"
-#include "global.h"
-#include "print.h"
-#include "io.h"
+#include "./kernel/interrupt.h"
+#include "./kernel/stdint.h"
+#include "./kernel/global.h"
+#include "./lib/print.h"
+#include "./kernel/io.h"
 
-#define IDT_DESC_CNT    0x21
-
-#define PIC_M_CTRL  0x20
-#define PIC_M_DATA  0x21
-#define PIC_S_CTRL  0xA0
-#define PIC_S_DATA  0xA1
 
 
 extern void *handle_entry_table[IDT_DESC_CNT];           // 处理函数的入口表，声明定义在kernel.S中
@@ -56,6 +50,38 @@ static void exception_init() {
     intr_name[18] = "#MC Machine-Check Exception";          // 机器检查（检测到CPU或总线错误）
     intr_name[19] = "#XF SIMD Floating-Point Exception";    // SIMD协处理器异常
     // 20 ~ 31 保留
+}
+
+enum intr_status get_intr_status() {
+    uint32_t eflags = 0;
+    GET_EFLAGS(eflags);
+    return (EFLAGS_IF & eflags) ? INTR_ON : INTR_OFF;
+}
+
+enum intr_status set_intr_status(enum intr_status status) {
+    return status & INTR_ON ? enable_intr() : disable_intr();
+}
+
+enum intr_status enable_intr() {
+    enum intr_status old_status;
+    if (INTR_ON == get_intr_status()) {
+        old_status = INTR_ON;
+    } else {
+        old_status = INTR_OFF;
+        asm volatile("sti");
+    }
+    return old_status;
+}
+
+enum intr_status disable_intr() {
+    enum intr_status old_status;
+    if (INTR_ON == get_intr_status()) {
+        old_status = INTR_ON;
+        asm volatile("cli" : : : "memory");
+    } else {
+        old_status = INTR_OFF;
+    }
+    return old_status;
 }
 
 static void make_int_desc(struct GateDesc* p_gdesc, uint16_t attr, void * handle_func) {

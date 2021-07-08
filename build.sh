@@ -11,15 +11,17 @@ fi
 OBJDIR=$DIRPRE'build/obj'
 cd .. 
 
-nasm -f elf32 -o ./build/obj/print.o ./src/lib/kernel/print.asm
+nasm -f elf32 -o ./build/obj/print.o ./src/lib/print.asm
 nasm -f elf32 -o ./build/obj/kernel.o ./src/kernel/kernel.asm
 
-gcc -g -O0 -m32 -I ./include/kernel/ -c -fno-stack-protector -fno-builtin -o ./build/obj/main.o ./src/kernel/main.c
-gcc -g -O0 -m32 -I ./include/kernel/ -c -fno-stack-protector -fno-builtin -o ./build/obj/init.o ./src/kernel/init.c
-gcc -g -O0 -m32 -I ./include/kernel/ -c -fno-stack-protector -fno-builtin -o ./build/obj/interrupt.o ./src/kernel/interrupt.c
-gcc -g -O0 -m32 -I ./include/kernel/ -c -fno-stack-protector -fno-builtin -o ./build/obj/timer.o ./src/kernel/timer.c
+gcc -g -O0 -m32 -D NDEBUG -I ./include/ -c -fno-stack-protector -fno-builtin -o ./build/obj/main.o ./src/kernel/main.c
+gcc -g -O0 -m32 -I ./include/ -c -fno-stack-protector -fno-builtin -o ./build/obj/init.o ./src/kernel/init.c
+gcc -g -O0 -m32 -I ./include/ -c -fno-stack-protector -fno-builtin -o ./build/obj/interrupt.o ./src/kernel/interrupt.c
+gcc -g -O0 -m32 -I ./include/ -c -fno-stack-protector -fno-builtin -o ./build/obj/timer.o ./src/kernel/timer.c
+gcc -g -O0 -m32 -I ./include/ -c -fno-stack-protector -fno-builtin -o ./build/obj/debug.o ./src/lib/debug.c
+gcc -g -O0 -m32 -I ./include/ -c -fno-stack-protector -fno-builtin -o ./build/obj/string.o ./src/lib/string.c
 ld -m elf_i386 -Ttext 0x00001500 -e main -o ./build/bin/kernel.bin  ${OBJDIR}/main.o  ${OBJDIR}/init.o\
- ${OBJDIR}/interrupt.o ${OBJDIR}/timer.o ${OBJDIR}/print.o ${OBJDIR}/kernel.o 
+ ${OBJDIR}/interrupt.o ${OBJDIR}/timer.o ${OBJDIR}/print.o ${OBJDIR}/kernel.o  ${OBJDIR}/debug.o
 
 mbr_path=$DIRPRE'build/bin/mbr.bin'
 img_path=$DIRPRE"img/start.img"

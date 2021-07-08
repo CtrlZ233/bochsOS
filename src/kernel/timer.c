@@ -1,6 +1,6 @@
-#include "timer.h"
-#include "io.h"
-#include "print.h"
+#include "./kernel/timer.h"
+#include "./kernel/io.h"
+#include "./lib/print.h"
 
 //         --------------控制字格式---------------
 //         7    6    5    4    3    2    1    0
