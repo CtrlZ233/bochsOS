@@ -17,6 +17,6 @@ bool bitmap_scan_test(struct bitmap *btmpPtr_, uint32_t bit_idx_);
 // 找到连续cnt_个空闲位置，并返回第一个下标
 int bitmap_scan(struct bitmap *btmpPtr_, uint32_t cnt_);
 
-void bitmap_set(struct bitmap *btmpPtr_, uint32_t bit_idx, int8_t value);
+void bitmap_set(struct bitmap *btmpPtr_, uint32_t bit_idx_, int8_t value);
 
 #endif

@@ -20,8 +20,10 @@ gcc -g -O0 -m32 -I ./include/ -c -fno-stack-protector -fno-builtin -o ./build/ob
 gcc -g -O0 -m32 -I ./include/ -c -fno-stack-protector -fno-builtin -o ./build/obj/timer.o ./src/kernel/timer.c
 gcc -g -O0 -m32 -I ./include/ -c -fno-stack-protector -fno-builtin -o ./build/obj/debug.o ./src/lib/debug.c
 gcc -g -O0 -m32 -I ./include/ -c -fno-stack-protector -fno-builtin -o ./build/obj/string.o ./src/lib/string.c
+gcc -g -O0 -m32 -I ./include/ -c -fno-stack-protector -fno-builtin -o ./build/obj/bitmap.o ./src/lib/bitmap.c
 ld -m elf_i386 -Ttext 0x00001500 -e main -o ./build/bin/kernel.bin  ${OBJDIR}/main.o  ${OBJDIR}/init.o\
- ${OBJDIR}/interrupt.o ${OBJDIR}/timer.o ${OBJDIR}/print.o ${OBJDIR}/kernel.o  ${OBJDIR}/debug.o
+ ${OBJDIR}/interrupt.o ${OBJDIR}/timer.o ${OBJDIR}/print.o ${OBJDIR}/kernel.o  ${OBJDIR}/debug.o ${OBJDIR}/string.o \
+ ${OBJDIR}/bitmap.o
 
 mbr_path=$DIRPRE'build/bin/mbr.bin'
 img_path=$DIRPRE"img/start.img"
