@@ -6,6 +6,7 @@
         "timer.h": "c",
         "global.h": "c",
         "io.h": "c",
-        "init.h": "c"
+        "init.h": "c",
+        "memory.h": "c"
     }
 }

@@ -5,7 +5,8 @@
 #include "./lib/bitmap.h"
 
 #define PG_SIZE                 4096
-#define MEM_BITMAP_BASE         0xc009a000;
+#define MEM_BITMAP_BASE         0xc009a000
+#define KERNLE_HEAP_START       0xc0100000
 
 struct pool
 {

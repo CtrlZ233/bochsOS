@@ -115,6 +115,10 @@ GDT_LIMIT equ GDT_SIZE - 1
 empty_slot:
     times 256 - ($-GDT) db 0
 
+
+; 之后的内存管理需要用到该变量，物理地址为 0x900 + 256 = 0xa00
+total_mem_size dd 0
+
 GDT_Description:
     dw GDT_LIMIT
     dd GDT 
@@ -190,6 +194,7 @@ findLoop:
     
 next_ARDS:
     loop findLoop
+    mov [total_mem_size], edx
     ret
 
 
@@ -297,21 +302,21 @@ create_kernel_pde:
 
     
 
-init_kernel_page:   ; 第1M已经被映射过了，第2M~5M用于存放页表和页目录，因此我们将第6~9M映射到该逻辑页面
-    ; 0x8048000 这一个页面需要映射（从gcc编译后的elf文件的某些segment的虚拟地址在这个页上）
-    mov [PAGE_DIR_TBALE_ADDR + 0x80], eax
-    mov ebx, [PAGE_DIR_TBALE_ADDR + 0x80]
-    and ebx, 0xFFFFF000     ; 需要准备的页表的基地址
-    mov edx, 0x600000        ; 物理页面地址
-    or edx, PG_P | PG_RW_W |PG_US_U
-    mov esi, 0
-    mov ecx, 1024
+; init_kernel_page:   ; 第1M已经被映射过了，第2M~5M用于存放页表和页目录，因此我们将第6~9M映射到该逻辑页面
+;     ; 0x8048000 这一个页面需要映射（从gcc编译后的elf文件的某些segment的虚拟地址在这个页上）
+;     mov [PAGE_DIR_TBALE_ADDR + 0x80], eax
+;     mov ebx, [PAGE_DIR_TBALE_ADDR + 0x80]
+;     and ebx, 0xFFFFF000     ; 需要准备的页表的基地址
+;     mov edx, 0x600000        ; 物理页面地址
+;     or edx, PG_P | PG_RW_W |PG_US_U
+;     mov esi, 0
+;     mov ecx, 1024
 
-create_kernel_pte:
-    mov [ebx + 4 * esi], edx
-    add edx, 4096
-    inc esi
-    loop create_kernel_pte
+; create_kernel_pte:
+;     mov [ebx + 4 * esi], edx
+;     add edx, 4096
+;     inc esi
+;     loop create_kernel_pte
     
     ret
 
