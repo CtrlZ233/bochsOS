@@ -1,7 +1,7 @@
 #include "./kernel/memory.h"
 #include "./lib/print.h"
 #include "./kernel/stdint.h"
-
+#include "./lib/string.h"
 
 
 struct pool kernel_pool_, user_pool_;
@@ -76,21 +76,46 @@ static void * vaddr_get(enum pool_flags pf, uint32_t pg_cnt) {
 
 // 得到虚拟地址vaddr对应的pte指针
 uint32_t* get_pte_ptr(uint32_t vaddr) {
-    // todo:
-    return NULL;
+    // 0xFFC00000是第一个页表的虚拟地址，对应的物理地址为0x101000
+    uint32_t* pte = (uint32_t *)(0xFFC00000 + ((vaddr & 0xFFC00000) >> 10) + PTE_IDX(vaddr) * 4);
+    
+    return pte;
 }
 
 // 得到虚拟地址vaddr对应的pde指针 
 uint32_t* get_pde_ptr(uint32_t vaddr) {
-    // todo:
-    return NULL;
+    // 0xFFFFF000是页目录表的起始虚拟地址，对应的物理地址为0x100000
+    uint32_t* pde_ptr = (uint32_t*) ((0xFFFFF000) + PDE_IDX(vaddr) * 4);
+    return pde_ptr;
 }
 
 // 分配一个物理页，返回页框的物理地址
 static void* palloc(struct pool *m_pool) {
+    int bit_idx = bitmap_scan(&m_pool->pool_bitmap_, 1);
+    if (-1 == bit_idx) {
+        return NULL;
+    }
+    bitmap_set(&m_pool->pool_bitmap_, bit_idx, 1);
+    uint32_t page_phyaddr = bit_idx * PG_SIZE + m_pool->pddr_start_;
+    return (void *)page_phyaddr;
+} 
+
+// 在页表中添加虚拟地址 vaddr与物理地址page_phyaddr的映射
+static void page_table_add(void* vaddr, void* page_phyaddr) {
+    // todo:
+}
+
+// 分配pg_cnt个页空间
+void* malloc_page(enum pool_flags pf, uint32_t pg_cnt) {
     // todo:
     return NULL;
-} 
+}
+
+// 从内核物理内存池中申请1页内存，返回虚拟地址
+void* get_kernel_pages(uint32_t pg_cnt) {
+    // todo:
+    return NULL;
+}
 
 void mem_init () {
     put_string("mem_init start...\n");

@@ -72,4 +72,10 @@ uint32_t* get_pte_ptr(uint32_t vaddr);
 // 得到虚拟地址vaddr对应的pde指针 
 uint32_t* get_pde_ptr(uint32_t vaddr);
 
+// 分配pg_cnt个页空间
+void* malloc_page(enum pool_flags pf, uint32_t pg_cnt);
+
+// 从内核物理内存池中申请1页内存，返回虚拟地址
+void* get_kernel_pages(uint32_t pg_cnt) ;
+
 #endif

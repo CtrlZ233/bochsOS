@@ -291,7 +291,7 @@ clear_page_dir:
 
 create_pde:
     mov eax, PAGE_DIR_TBALE_ADDR
-    add eax, 0x1000    ; 第一个页表的物理地址0x101000 , eax存放页目录项
+    add eax, 0x1000    ; 第一个页表项的物理地址0x101000 , eax存放页目录项
     mov ebx, eax
 
     or eax, PG_P | PG_RW_W |PG_US_U
